@@ -38,6 +38,9 @@ dependencies:
   audio_service: ^0.18.18
   audio_session: ^0.2.2
   another_flushbar: ^1.12.32
+  palette_generator: ^0.3.3+7
+  just_audio_background: ^0.0.1-beta.17
+
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +70,11 @@ flutter:
     - assets/sounds/song2.mp3
     - assets/sounds/song3.mp3
     - assets/sounds/song4.mp3
+    - assets/images/cover1.jpg
+    - assets/images/cover2.jpg
+    - assets/images/cover3.jpg
+    - assets/images/cover4.jpg
+
 
      
 
