@@ -41,7 +41,7 @@ class MusicPlayerPage extends StatefulWidget {
 }
 
 class _MusicPlayerPageState extends State<MusicPlayerPage> {
-  final AudioPlayer _player = AudioPlayer();
+  late AudioPlayer _player;
   final List<String> _playlist = [
     'assets/sounds/song1.mp3',
     'assets/sounds/song2.mp3',
@@ -65,56 +65,51 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     'Artiste 4',
   ];
 
-
   LoopMode _loopMode = LoopMode.off;
   final Set<int> _likedSongs = {};
 
   @override
   void initState() {
     super.initState();
+    _player = AudioPlayer();
     _initPlayer();
     _updateDominantColor();
   }
 
   Future<void> _initPlayer() async {
-  WidgetsBinding.instance.addPostFrameCallback((_) async {
-    // Création de la playlist avec MediaItem
-    final List<AudioSource> sources = [];
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final List<AudioSource> sources = [];
 
-    for (int i = 0; i < _playlist.length; i++) {
-      sources.add(
-        AudioSource.asset(
-          _playlist[i],
-          tag: MediaItem(
-            id: i.toString(),
-            title: "Morceau ${i + 1}",
-            artist: _artists[i],
-            artUri: Uri.parse("asset://${_covers[i]}"),
+      for (int i = 0; i < _playlist.length; i++) {
+        sources.add(
+          AudioSource.asset(
+            _playlist[i],
+            tag: MediaItem(
+              id: i.toString(),
+              title: "Morceau ${i + 1}",
+              artist: _artists[i],
+              //artUri: Uri.parse('${_covers[i]}')
+            ),
           ),
-        ),
-      );
-    }
-
-    await _player.setAudioSource(
-      ConcatenatingAudioSource(children: sources),
-    );
-
-    // Mise à jour de la cover + index
-    _player.currentIndexStream.listen((index) {
-      if (index != null) {
-        setState(() => _currentIndex = index);
-        _updateDominantColor();
+        );
       }
-    });
 
-    // Passer automatiquement au morceau suivant
-    _player.playerStateStream.listen((state) {
-      if (state.processingState == ProcessingState.completed) {
-        _nextTrack();
-      }
+      await _player.setAudioSource(ConcatenatingAudioSource(children: sources));
+
+      _player.currentIndexStream.listen((index) {
+        if (index != null) {
+          setState(() => _currentIndex = index);
+          _updateDominantColor();
+        }
+      });
+
+      _player.playerStateStream.listen((state) {
+        if (state.processingState == ProcessingState.completed) {
+          _nextTrack();
+        }
+      });
     });
-  });
-}
+  }
 
   Future<void> _updateDominantColor() async {
     setState(() {});
@@ -177,7 +172,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     setState(() {});
   }
 
-  // ----------------- NOUVEAU : Bottom Sheet Musiques Likées -----------------
   void _openLikedSongsBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -199,45 +193,48 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                       ),
                     )
                   : ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _likedSongs.length,
-                    itemBuilder: (context, index) {
-                      int songIndex = _likedSongs.elementAt(index);
-                      return Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        child: ListTile(
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              _covers[songIndex],
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
+                      padding: const EdgeInsets.all(20),
+                      itemCount: _likedSongs.length,
+                      itemBuilder: (context, index) {
+                        int songIndex = _likedSongs.elementAt(index);
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          child: ListTile(
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.asset(
+                                _covers[songIndex],
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                          ),
-                          title: Text(
-                            "Morceau ${songIndex + 1}",
-                            style: const TextStyle(
+                            title: Text(
+                              "Morceau ${songIndex + 1}",
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
-                                fontWeight: FontWeight.w600),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              _artists[songIndex],
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
-                          subtitle: Text(
-                            _artists[songIndex],
-                            style: const TextStyle(color: Colors.white70, fontSize: 14),
-                          ),
-
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
+            ),
           ),
-        ),
-      );
-    },
-  );
-}
-  // ----------------- NOUVEAU : Bottom Sheet Toutes les chansons -----------------
+        );
+      },
+    );
+  }
+
   void _openAllSongsBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -256,43 +253,49 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                 itemCount: _playlist.length,
                 itemBuilder: (context, index) {
                   return Container(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.asset(
-                        _covers[index],
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          _covers[index],
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    ),
-                    title: Text(
-                      "Morceau ${index + 1}",
-                      style: const TextStyle(
+                      title: Text(
+                        "Morceau ${index + 1}",
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
-                          fontWeight: FontWeight.w600),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        _artists[index],
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
-                    subtitle: Text(
-                      _artists[index],
-                      style: const TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
+
   Stream<PositionData> get _positionDataStream =>
       Rx.combineLatest2<Duration, Duration?, PositionData>(
         _player.positionStream,
         _player.durationStream,
-        (position, duration) => PositionData(position, duration ?? Duration.zero),
+        (position, duration) =>
+            PositionData(position, duration ?? Duration.zero),
       );
 
   @override
@@ -310,19 +313,14 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              _covers[_currentIndex],
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset(_covers[_currentIndex], fit: BoxFit.cover),
           ),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-              child: Container(
-                color: Colors.black.withOpacity(0.3),
-              ),
-            ),
-          ),
+          // Positioned.fill(
+          //   child: BackdropFilter(
+          //     filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          //     child: Container(color: Colors.black.withOpacity(0.3)),
+          //   ),
+          // ),
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -378,9 +376,12 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                 StreamBuilder<PositionData>(
                   stream: _positionDataStream,
                   builder: (context, snapshot) {
-                    final data = snapshot.data ??
+                    final data =
+                        snapshot.data ??
                         PositionData(
-                            Duration.zero, _player.duration ?? Duration.zero);
+                          Duration.zero,
+                          _player.duration ?? Duration.zero,
+                        );
 
                     return Column(
                       children: [
@@ -390,8 +391,9 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                           value: data.position.inMilliseconds
                               .clamp(0, data.duration.inMilliseconds)
                               .toDouble(),
-                          onChanged: (value) =>
-                              _player.seek(Duration(milliseconds: value.toInt())),
+                          onChanged: (value) => _player.seek(
+                            Duration(milliseconds: value.toInt()),
+                          ),
                           activeColor: Colors.greenAccent,
                           inactiveColor: Colors.white30,
                         ),
@@ -424,7 +426,10 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                     IconButton(
                       iconSize: 40,
                       onPressed: _previousTrack,
-                      icon: const Icon(Icons.skip_previous, color: Colors.white),
+                      icon: const Icon(
+                        Icons.skip_previous,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(width: 15),
                     GestureDetector(
@@ -466,7 +471,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
               ],
             ),
           ),
-          // Bouton All Songs
           Positioned(
             bottom: 100,
             right: 25,
@@ -523,7 +527,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -539,4 +543,4 @@ class PositionData {
   final Duration position;
   final Duration duration;
   PositionData(this.position, this.duration);
-} 
+}
